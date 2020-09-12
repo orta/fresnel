@@ -1,4 +1,4 @@
-import { MediaBreakpointProps } from "./Media"
+import { CreateMediaConfig, MediaBreakpointProps } from "./Media"
 import { createRuleSet, createClassName } from "./Utils"
 
 /**
@@ -6,7 +6,10 @@ import { createRuleSet, createClassName } from "./Utils"
  */
 export type MediaBreakpointKey = keyof MediaBreakpointProps
 
-type ValueBreakpointPropsTuple<T, B> = [T, MediaBreakpointProps<B>]
+type ValueBreakpointPropsTuple<T, B extends string[]> = [
+  T,
+  MediaBreakpointProps<B>
+]
 
 type Tuple = [string, string]
 
@@ -41,8 +44,13 @@ export class Breakpoints<B extends string> {
   private _breakpoints: Record<string, number>
   private _mediaQueries: Record<BreakpointKey, Map<string, string>>
 
-  constructor(breakpoints: { [key: string]: number }) {
-    this._breakpoints = breakpoints
+  constructor(breakpoints: CreateMediaConfig["breakpoints"]) {
+    const bp: Record<string, number> = {}
+    breakpoints.forEach(b => {
+      bp[b.name] = b.width
+    })
+
+    this._breakpoints = bp
 
     this._sortedBreakpoints = Object.keys(breakpoints)
       .map(breakpoint => [breakpoint, breakpoints[breakpoint]])

@@ -5,6 +5,7 @@ import { createResponsiveComponents } from "./DynamicResponsive"
 import { MediaQueries } from "./MediaQueries"
 import { intersection, propKey, createClassName } from "./Utils"
 import { BreakpointKey } from "./Breakpoints"
+import { ValueOf, DropFirst, DropLast, Between, NonEmptyArray } from "types"
 
 /**
  * A render prop that can be used to render a different container element than
@@ -19,7 +20,8 @@ export type RenderProp = (
 
 // TODO: All of these props should be mutually exclusive. Using a union should
 //       probably be made possible by https://github.com/Microsoft/TypeScript/pull/27408.
-export interface MediaBreakpointProps<B = string> {
+
+export interface MediaBreakpointProps<B extends string[] = []> {
   /**
    * Children will only be shown if the viewport matches the specified
    * breakpoint. That is, a viewport width that’s higher than the configured
@@ -43,7 +45,7 @@ export interface MediaBreakpointProps<B = string> {
      ```
    *
    */
-  at?: B
+  at?: ValueOf<B>
 
   /**
    * Children will only be shown if the viewport is smaller than the specified
@@ -63,7 +65,7 @@ export interface MediaBreakpointProps<B = string> {
      ```
    *
    */
-  lessThan?: B
+  lessThan?: ValueOf<DropFirst<B>>
 
   /**
    * Children will only be shown if the viewport is greater than the specified
@@ -83,7 +85,7 @@ export interface MediaBreakpointProps<B = string> {
      ```
    *
    */
-  greaterThan?: B
+  greaterThan?: ValueOf<DropLast<B>>
 
   /**
    * Children will only be shown if the viewport is greater or equal to the
@@ -106,7 +108,8 @@ export interface MediaBreakpointProps<B = string> {
      ```
    *
    */
-  greaterThanOrEqual?: B
+
+  greaterThanOrEqual?: ValueOf<B>
 
   /**
    * Children will only be shown if the viewport is between the specified
@@ -127,10 +130,11 @@ export interface MediaBreakpointProps<B = string> {
      ```
    *
    */
-  between?: [B, B]
+  between?: Between<B>
 }
 
-export interface MediaProps<B, I> extends MediaBreakpointProps<B> {
+export interface MediaProps<B extends string[], I>
+  extends MediaBreakpointProps<B> {
   /**
    * Children will only be shown if the interaction query matches.
    *
@@ -213,7 +217,7 @@ export interface CreateMediaConfig {
    *
    * @see {@link createMedia}
    */
-  breakpoints: { [key: string]: number }
+  breakpoints: Array<{ name: string; width: number }> // { [key: string]: number }
 
   /**
    * The interaction definitions for your application.
@@ -221,7 +225,7 @@ export interface CreateMediaConfig {
   interactions?: { [key: string]: string }
 }
 
-export interface CreateMediaResults<B, I> {
+export interface CreateMediaResults<B extends NonEmptyArray<string>, I> {
   /**
    * The React component that you use throughout your application.
    *
@@ -286,11 +290,11 @@ export interface CreateMediaResults<B, I> {
    ```tsx
    const MyAppMedia = createMedia({
      breakpoints: {
-       xs: 0,
-       sm: 768,
-       md: 900
-       lg: 1024,
-       xl: 1192,
+       { name: "xs", width: 0 }
+       { name: "sm", width: 768 }
+       { name: "md", width: 90 }
+       { name: "lg", width: 1024 }
+       { name: "xl", width: 1192 }
      },
      interactions: {
        hover: `not all and (hover:hover)`
@@ -305,7 +309,7 @@ export interface CreateMediaResults<B, I> {
  */
 export function createMedia<
   C extends CreateMediaConfig,
-  B extends keyof C["breakpoints"],
+  B extends Array<C["breakpoints"][number]["name"]>,
   I extends keyof C["interactions"]
 >(config: C): CreateMediaResults<B, I> {
   const mediaQueries = new MediaQueries<B>(

@@ -1,14 +1,14 @@
 import { Breakpoints, BreakpointKey } from "./Breakpoints"
 import { Interactions } from "./Interactions"
 import { intersection } from "./Utils"
-import { MediaBreakpointProps } from "./Media"
+import { CreateMediaConfig, MediaBreakpointProps } from "./Media"
 
 /**
  * Encapsulates all interaction data (and breakpoint data in the superclass)
  * needed by the Media component. The data is generated on initialization so no
  * further runtime work is necessary.
  */
-export class MediaQueries<B extends string> {
+export class MediaQueries<B extends string[]> {
   static validKeys() {
     return [...Breakpoints.validKeys(), ...Interactions.validKeys()]
   }
@@ -17,7 +17,7 @@ export class MediaQueries<B extends string> {
   private _interactions: Interactions
 
   constructor(
-    breakpoints: { [key: string]: number },
+    breakpoints: CreateMediaConfig["breakpoints"],
     interactions: { [name: string]: string }
   ) {
     this._breakpoints = new Breakpoints(breakpoints)
